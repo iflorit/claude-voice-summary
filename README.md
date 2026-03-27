@@ -1,111 +1,155 @@
 # Claude Code Voice Summary
 
-Voice summaries for agent task completions in Claude Code. Reads summaries aloud through your headphones after long agent operations using high-quality neural TTS.
+> **Hear what your agents did.** Voice summaries for Claude Code agent completions using neural TTS. Plays through your headphones automatically -- never interrupts through speakers unless you want it to.
 
-## Features
-
-- Headphone detection (AirPods, Bluetooth, wired) — never plays through speakers unless you want it to
-- High-quality neural TTS via [edge-tts](https://github.com/rany2/edge-tts) (Microsoft Edge Neural Voices)
-- Fallback to macOS `say` if edge-tts is unavailable
-- Spanish and English voice support (easily extensible)
-- Skill `/agent-summary` for manual invocation
-- Three modes: `off`, `headphones`, `all`
-
-## Installation
-
-### 1. Install TTS engine
-
-```bash
-pip3 install edge-tts
+```
+Agent completed: "Refactored the auth module into 3 files with DI protocols"
+     |
+     v
+ [edge-tts] --> [AirPods] --> You hear the summary while reviewing code
 ```
 
-### 2. Copy to your Claude Code project
+---
+
+## Why
+
+When Claude Code agents run long tasks in the background, you context-switch. When they finish, you have to read the output to understand what happened. **Voice Summary reads it to you** -- so you stay in flow.
+
+- Agent finishes a 5-minute refactor? Hear a 10-second summary.
+- Three agents complete in parallel? Three summaries, queued.
+- No headphones? Stays silent. Put them on? It talks.
+
+---
+
+## Quick Start
 
 ```bash
-# Skill
-cp skills/agent-summary.md <your-project>/.claude/skills/
+# 1. Install TTS
+pip3 install edge-tts
 
-# Script
-mkdir -p <your-project>/tooling/scripts
+# 2. Clone
+git clone https://github.com/iflorit/claude-voice-summary.git
+cd claude-voice-summary
+
+# 3. Copy to your project
+cp skills/agent-summary.md <your-project>/.claude/skills/
 cp scripts/voice-summary.sh <your-project>/tooling/scripts/
 chmod +x <your-project>/tooling/scripts/voice-summary.sh
+
+# 4. Enable (add to .claude/settings.local.json)
+# "env": { "VOICE_SUMMARY": "headphones" }
 ```
 
-### 3. Configure
-
-Add to your `.claude/settings.local.json`:
-
-```json
-{
-  "env": {
-    "VOICE_SUMMARY": "headphones"
-  }
-}
-```
+---
 
 ## Modes
 
-| `VOICE_SUMMARY` | Behavior |
-|------------------|----------|
-| `off` | Never plays audio (default if unset) |
-| `headphones` | Plays only when headphones/AirPods are connected |
-| `all` | Always plays (speakers or headphones) |
+| Mode | `VOICE_SUMMARY=` | When it plays |
+|------|-------------------|---------------|
+| Silent | `off` | Never (default) |
+| Smart | `headphones` | Only when AirPods/headphones are connected |
+| Always | `all` | Speakers or headphones |
+
+**Recommended: `headphones`** -- you'll hear summaries when you have AirPods in, silence when you don't.
+
+---
 
 ## Usage
 
-### Manual (via skill)
+### `/agent-summary` skill
 
-```
-/agent-summary
-```
+Type `/agent-summary` in Claude Code after any agent completes. It:
 
-Generates a summary of the last completed agent task and reads it aloud.
+1. Reads the last agent's output
+2. Classifies it (Business / Architecture / Implementation / QA)
+3. Generates a 3-5 sentence summary
+4. Plays it through your headphones
 
-### Programmatic (from scripts or hooks)
+### Programmatic
 
 ```bash
-echo "Your summary text here" > /tmp/summary.txt
+echo "The orchestrator now uses a Strategy pattern with 4 providers" > /tmp/summary.txt
 ./tooling/scripts/voice-summary.sh /tmp/summary.txt es
 ```
 
-Second argument is the language: `es` (Spanish, default) or `en` (English).
+Languages: `es` (Spanish, default), `en` (English).
+
+---
 
 ## Voices
 
-| Language | Voice | Provider |
-|----------|-------|----------|
-| Spanish (es) | `es-ES-AlvaroNeural` | Microsoft Edge |
-| English (en) | `en-GB-RyanNeural` | Microsoft Edge |
-| Spanish fallback | `Monica` | macOS `say` |
-| English fallback | `Daniel` | macOS `say` |
+Neural voices from Microsoft Edge -- natural, expressive, fast.
 
-### Adding more voices
+| Language | Voice | Quality |
+|----------|-------|---------|
+| Spanish | `es-ES-AlvaroNeural` | Natural male, Castilian Spanish |
+| English | `en-GB-RyanNeural` | Natural male, British English |
 
-Edit `voice-summary.sh` and add voice variables:
+Falls back to macOS `say` (Monica/Daniel) if edge-tts is unavailable.
+
+### Add more voices
 
 ```bash
+# In voice-summary.sh, add:
 VOICE_FR="fr-FR-HenriNeural"
 VOICE_DE="de-DE-ConradNeural"
+VOICE_JA="ja-JP-KeitaNeural"
 ```
 
-Full voice list: `edge-tts --list-voices`
+Browse all voices: `edge-tts --list-voices`
+
+---
+
+## How It Works
+
+```
+Claude Code agent completes
+         |
+    /agent-summary skill
+         |
+    Classify: Business | Architecture | Implementation | QA
+         |
+    Generate 3-5 sentence summary
+         |
+    Write to /tmp/claude-voice-summaries/latest_summary.txt
+         |
+    voice-summary.sh
+         |
+    Check $VOICE_SUMMARY mode
+         |
+    +---------+------------+
+    |         |            |
+   off    headphones     all
+    |         |            |
+  exit   check audio    proceed
+          output          |
+            |         generate
+         AirPods?     edge-tts
+          / \            |
+        no   yes      afplay
+        |     |
+      exit  generate
+            edge-tts
+               |
+            afplay
+```
+
+---
 
 ## Requirements
 
-- macOS (uses `system_profiler` for headphone detection and `afplay` for playback)
-- Python 3 + edge-tts
-- Claude Code CLI
+- **macOS** (headphone detection via `system_profiler`, playback via `afplay`)
+- **Python 3** + `edge-tts` (`pip3 install edge-tts`)
+- **Claude Code CLI**
 
-## How it works
+> Linux/Windows support: PRs welcome. Replace `system_profiler` with `pactl` (Linux) or `Get-AudioDevice` (Windows).
 
-1. Claude Code completes a long agent task
-2. `/agent-summary` skill generates a concise explanation
-3. Summary is written to `/tmp/claude-voice-summaries/latest_summary.txt`
-4. `voice-summary.sh` checks `$VOICE_SUMMARY` mode
-5. If `headphones`: checks `system_profiler SPAudioDataType` for AirPods/Bluetooth
-6. Generates audio via `edge-tts` (or `say` fallback)
-7. Plays via `afplay` and cleans up
+---
 
 ## License
 
 MIT
+
+---
+
+*Built during a 20-hour flight tracking feature session where I needed to hear what 30+ agents were doing without reading every output.*
