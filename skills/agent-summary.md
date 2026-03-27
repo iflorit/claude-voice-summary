@@ -1,47 +1,48 @@
 ---
 name: agent-summary
-description: Voice summary for agent completions AND session milestones — reads aloud through headphones
+description: Voice narration for agent completions, session milestones, questions, and decisions
 user_invocable: true
 ---
 
 # Voice Summary
 
-Generate a concise voice summary of what just happened in the session. Works for both agent completions and main session milestones.
+Voice narration for everything happening in a Claude Code session. Not just results — also questions, decisions, and explanations.
 
-## When to use
+## When to narrate
 
-- After an agent completes a background task (task notification received)
-- After a significant session milestone (build passed, tests ran, PR created, deploy finished)
-- After a complex multi-step operation completes
-- When the user invokes `/agent-summary` manually
+- **Agent completion**: background task finished — what it did, result
+- **Session milestone**: build passed, tests ran, PR created, deploy finished
+- **Question to user**: Claude or an agent needs a decision — narrate the question
+- **Decision made**: user chose an option — confirm what was decided
+- **Error/blocker**: something failed — explain what and next steps
+
+## Depth levels (`VOICE_DEPTH` env var)
+
+| Level | What you hear |
+|-------|---------------|
+| `info` | Results only: "Agent done. 1354 tests, 0 failures." |
+| `detail` | Results + context: "Agent fixed 25 tests. Root cause was the regex missing a word boundary. No regressions." |
+| `explain` | Full explanation: architecture decisions, why patterns were chosen, how the code works, trade-offs considered |
 
 ## Instructions
 
-1. Identify what just completed:
-   - **Agent completion**: read the task notification result
-   - **Session milestone**: summarize the action and its outcome (build result, test count, deploy status)
-2. Classify the work:
-   - **Business**: product decisions, PM specs, roadmap
-   - **Architecture**: design patterns, refactors, new abstractions
-   - **Implementation**: feature code, bug fixes, UI changes
-   - **QA**: tests written/fixed, coverage changes
-   - **Ops**: builds, deploys, CI/CD, PR operations
-3. Generate a 2-4 sentence summary in the user's working language
-   - Be concise — this will be spoken aloud
-   - Lead with what happened, then why it matters
-   - Include numbers when relevant (test count, files changed, duration)
-4. Write the summary to `/tmp/claude-voice-summaries/latest_summary.txt`
-5. Run: `<project-root>/tooling/scripts/voice-summary.sh /tmp/claude-voice-summaries/latest_summary.txt <lang>`
-   - The script handles headphone detection and mode gating via `$VOICE_SUMMARY`
-6. Always display the text summary in the conversation regardless of voice
+1. Read `$VOICE_DEPTH` env var (default: `detail`)
+2. Identify what just happened (see "When to narrate" above)
+3. Generate the narration text at the appropriate depth:
+   - `info`: 1-2 sentences, facts only
+   - `detail`: 2-4 sentences, facts + context
+   - `explain`: 4-8 sentences, facts + context + reasoning + how it works
+4. For **questions**: always narrate regardless of depth — the user needs to hear them
+5. Write to `/tmp/claude-voice-summaries/latest_summary.txt`
+6. Run: `<project-root>/tooling/scripts/voice-summary.sh /tmp/claude-voice-summaries/latest_summary.txt <lang>`
+7. Always display text in conversation regardless of voice
 
 ## Output format
 
 ```
 ## Resumen
 
-[2-4 sentence summary]
+[narration text at appropriate depth]
 
-Tipo: [Business | Architecture | Implementation | QA | Ops]
-Impacto: [LOW | MEDIUM | HIGH | CRITICAL]
+Tipo: [Business | Architecture | Implementation | QA | Ops | Question | Decision]
 ```

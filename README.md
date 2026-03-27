@@ -44,15 +44,48 @@ chmod +x <your-project>/tooling/scripts/voice-summary.sh
 
 ---
 
-## Modes
+## Settings
 
-| Mode | `VOICE_SUMMARY=` | When it plays |
-|------|-------------------|---------------|
-| Silent | `off` | Never (default) |
-| Smart | `headphones` | Only when headphones/headphones are connected |
-| Always | `all` | Speakers or headphones |
+### Output mode (`VOICE_SUMMARY`)
 
-**Recommended: `headphones`** -- you'll hear summaries when you have headphones in, silence when you don't.
+| Value | When it plays |
+|-------|---------------|
+| `off` | Never (default) |
+| `headphones` | Only when headphones are connected |
+| `all` | Speakers or headphones |
+
+### Depth level (`VOICE_DEPTH`)
+
+| Value | What you hear |
+|-------|---------------|
+| `info` | Facts only: "Done. 1354 tests, 0 failures." |
+| `detail` | Facts + context: "Fixed 25 tests. Root cause was regex boundary. No regressions." **(default)** |
+| `explain` | Full explanation: architecture decisions, why patterns were chosen, trade-offs |
+
+```json
+{
+  "env": {
+    "VOICE_SUMMARY": "headphones",
+    "VOICE_DEPTH": "detail"
+  }
+}
+```
+
+Change at runtime: `/voice-mode headphones detail` or `/voice-mode all explain`
+
+---
+
+## What gets narrated
+
+Not just results -- everything relevant:
+
+- **Agent completions**: what it did, result, impact
+- **Session milestones**: build passed, tests ran, PR created
+- **Questions**: when Claude needs a decision from you
+- **Decisions**: confirming what was chosen
+- **Errors/blockers**: what failed and next steps
+
+Questions are always narrated regardless of depth -- you need to hear them.
 
 ---
 
@@ -60,12 +93,11 @@ chmod +x <your-project>/tooling/scripts/voice-summary.sh
 
 ### `/agent-summary` skill
 
-Type `/agent-summary` in Claude Code after any agent completes. It:
+Type `/agent-summary` in Claude Code. It:
 
-1. Reads the last agent's output
-2. Classifies it (Business / Architecture / Implementation / QA)
-3. Generates a 3-5 sentence summary
-4. Plays it through your headphones
+1. Identifies what just happened (agent, milestone, question)
+2. Generates narration at your chosen depth
+3. Plays it through your headphones
 
 ### Programmatic
 
