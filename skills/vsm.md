@@ -1,6 +1,6 @@
 ---
-name: voice-mode
-description: Change voice output and depth — /voice-mode [off|headphones|all] [info|detail|explain]
+name: vsm
+description: Change voice output and depth — /vsm [off|headphones|all] [info|detail|explain]
 user_invocable: true
 args: mode depth
 ---
@@ -12,10 +12,10 @@ Change voice summary settings at runtime.
 ## Usage
 
 ```
-/voice-mode headphones          # change output mode only
-/voice-mode all explain         # change both output and depth
-/voice-mode off                 # disable voice
-/voice-mode                     # show current settings
+/vsm headphones          # change output mode only
+/vsm all explain         # change both output and depth
+/vsm off                 # disable voice
+/vsm                     # show current settings
 ```
 
 ## Arguments

@@ -71,7 +71,7 @@ chmod +x <your-project>/tooling/scripts/voice-summary.sh
 }
 ```
 
-Change at runtime: `/voice-mode headphones detail` or `/voice-mode all explain`
+Change at runtime: `/vsm headphones detail` or `/vsm all explain`
 
 ---
 
