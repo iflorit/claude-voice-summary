@@ -1,7 +1,12 @@
 #!/bin/bash
 # voice-summary.sh — Generate and play voice summary of agent output
 # Usage: ./voice-summary.sh <text_file> [language]
-# Requires: edge-tts + macOS `afplay`, headphones connected OR VOICE_SUMMARY_ENABLED=true
+# Requires: edge-tts + macOS `afplay`
+#
+# VOICE_SUMMARY env var controls behavior:
+#   off        — never play (default)
+#   headphones — only play when headphones/AirPods are connected
+#   all        — always play (headphones or speaker)
 
 set -euo pipefail
 
@@ -10,30 +15,32 @@ LANG="${2:-es}"
 VOICE_ES="es-ES-AlvaroNeural"
 VOICE_EN="en-GB-RyanNeural"
 OUTPUT_DIR="/tmp/claude-voice-summaries"
-SETTINGS_FILE="$(dirname "$0")/../../.claude/settings.local.json"
-
-# Check if enabled via settings or env
-is_enabled() {
-    if [ "${VOICE_SUMMARY_ENABLED:-}" = "true" ]; then
-        return 0
-    fi
-    if [ -f "$SETTINGS_FILE" ]; then
-        enabled=$(python3 -c "import json; d=json.load(open('$SETTINGS_FILE')); print(d.get('voice_summary_enabled', False))" 2>/dev/null || echo "False")
-        [ "$enabled" = "True" ] && return 0
-    fi
-    return 1
-}
+MODE="${VOICE_SUMMARY:-off}"
 
 # Check headphones connected
 has_headphones() {
     system_profiler SPAudioDataType 2>/dev/null | grep -qi "airpod\|headphone\|bluetooth.*output"
 }
 
-# Main
-if ! is_enabled && ! has_headphones; then
-    echo "[voice-summary] Disabled (no headphones, VOICE_SUMMARY_ENABLED not set)"
-    exit 0
-fi
+# Main gate
+case "$MODE" in
+    off)
+        echo "[voice-summary] Disabled (VOICE_SUMMARY=off)"
+        exit 0
+        ;;
+    headphones)
+        if ! has_headphones; then
+            echo "[voice-summary] Skipped — no headphones detected (VOICE_SUMMARY=headphones)"
+            exit 0
+        fi
+        ;;
+    all)
+        ;; # always play
+    *)
+        echo "[voice-summary] Unknown mode '$MODE' — use off|headphones|all"
+        exit 0
+        ;;
+esac
 
 if [ -z "$TEXT_FILE" ] || [ ! -f "$TEXT_FILE" ]; then
     echo "[voice-summary] No text file provided or file not found: $TEXT_FILE"
