@@ -26,21 +26,32 @@ When Claude Code runs long tasks -- background agents, builds, test suites -- yo
 ## Quick Start
 
 ```bash
-# 1. Install TTS
+# 1. Install TTS engine
 pip3 install edge-tts
 
 # 2. Clone
 git clone https://github.com/iflorit/claude-voice-summary.git
 cd claude-voice-summary
 
-# 3. Copy to your project
-cp skills/agent-summary.md <your-project>/.claude/skills/
+# 3. Copy skills (directory format required by Claude Code)
+cp -r skills/agent-summary <your-project>/.claude/skills/
+cp -r skills/vsm <your-project>/.claude/skills/
+
+# 4. Copy script
+mkdir -p <your-project>/tooling/scripts
 cp scripts/voice-summary.sh <your-project>/tooling/scripts/
 chmod +x <your-project>/tooling/scripts/voice-summary.sh
 
-# 4. Enable (add to .claude/settings.local.json)
-# "env": { "VOICE_SUMMARY": "headphones" }
+# 5. Enable (add to .claude/settings.local.json)
+# "env": { "VOICE_SUMMARY": "headphones", "VOICE_DEPTH": "detail" }
 ```
+
+### Skills installed
+
+| Skill | Command | What it does |
+|-------|---------|--------------|
+| `agent-summary` | `/agent-summary` | Narrate the last agent result or session milestone |
+| `vsm` | `/vsm headphones detail` | Change voice mode and depth at runtime |
 
 ---
 
