@@ -34,7 +34,7 @@ git clone https://github.com/iflorit/claude-voice-summary.git
 cd claude-voice-summary
 
 # 3. Copy skills (directory format required by Claude Code)
-cp -r skills/agent-summary <your-project>/.claude/skills/
+cp -r skills/vsm-summary <your-project>/.claude/skills/
 cp -r skills/vsm <your-project>/.claude/skills/
 
 # 4. Copy script
@@ -50,7 +50,7 @@ chmod +x <your-project>/tooling/scripts/voice-summary.sh
 
 | Skill | Command | What it does |
 |-------|---------|--------------|
-| `agent-summary` | `/agent-summary` | Narrate the last agent result or session milestone |
+| `vsm-summary` | `/vsm-summary` | Narrate the last agent result or session milestone |
 | `vsm` | `/vsm headphones detail` | Change voice mode and depth at runtime |
 
 ---
@@ -102,9 +102,9 @@ Questions are always narrated regardless of depth -- you need to hear them.
 
 ## Usage
 
-### `/agent-summary` skill
+### `/vsm-summary` skill
 
-Type `/agent-summary` in Claude Code. It:
+Type `/vsm-summary` in Claude Code. It:
 
 1. Identifies what just happened (agent, milestone, question)
 2. Generates narration at your chosen depth
@@ -150,7 +150,7 @@ Browse all voices: `edge-tts --list-voices`
 ```
 Claude Code agent completes
          |
-    /agent-summary skill
+    /vsm-summary skill
          |
     Classify: Business | Architecture | Implementation | QA
          |

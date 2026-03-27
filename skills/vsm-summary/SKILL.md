@@ -1,5 +1,5 @@
 ---
-name: agent-summary
+name: vsm-summary
 description: Voice narration for agent completions, session milestones, questions, and decisions
 user_invocable: true
 ---
