@@ -1,22 +1,24 @@
 # Claude Code Voice Summary
 
-> **Hear what your agents did.** Voice summaries for Claude Code agent completions using neural TTS. Plays through your headphones automatically -- never interrupts through speakers unless you want it to.
+> **Hear what Claude is doing.** Voice summaries for Claude Code -- agent completions, session milestones, status updates. Plays through your headphones automatically, never interrupts through speakers unless you want it to.
 
 ```
 Agent completed: "Refactored the auth module into 3 files with DI protocols"
+Session milestone: "Build passed, 1347 tests, 0 failures"
      |
      v
- [edge-tts] --> [AirPods] --> You hear the summary while reviewing code
+ [edge-tts] --> [headphones] --> You hear the summary while working
 ```
 
 ---
 
 ## Why
 
-When Claude Code agents run long tasks in the background, you context-switch. When they finish, you have to read the output to understand what happened. **Voice Summary reads it to you** -- so you stay in flow.
+When Claude Code runs long tasks -- background agents, builds, test suites -- you context-switch. When they finish, you have to read the output to understand what happened. **Voice Summary reads it to you** -- so you stay in flow.
 
 - Agent finishes a 5-minute refactor? Hear a 10-second summary.
 - Three agents complete in parallel? Three summaries, queued.
+- Build passes after fixing 25 tests? "Build green, all tests pass."
 - No headphones? Stays silent. Put them on? It talks.
 
 ---
@@ -47,10 +49,10 @@ chmod +x <your-project>/tooling/scripts/voice-summary.sh
 | Mode | `VOICE_SUMMARY=` | When it plays |
 |------|-------------------|---------------|
 | Silent | `off` | Never (default) |
-| Smart | `headphones` | Only when AirPods/headphones are connected |
+| Smart | `headphones` | Only when headphones/headphones are connected |
 | Always | `all` | Speakers or headphones |
 
-**Recommended: `headphones`** -- you'll hear summaries when you have AirPods in, silence when you don't.
+**Recommended: `headphones`** -- you'll hear summaries when you have headphones in, silence when you don't.
 
 ---
 
@@ -124,7 +126,7 @@ Claude Code agent completes
   exit   check audio    proceed
           output          |
             |         generate
-         AirPods?     edge-tts
+         headphones?     edge-tts
           / \            |
         no   yes      afplay
         |     |
@@ -150,6 +152,3 @@ Claude Code agent completes
 
 MIT
 
----
-
-*Built during a 20-hour flight tracking feature session where I needed to hear what 30+ agents were doing without reading every output.*

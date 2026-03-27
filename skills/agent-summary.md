@@ -1,36 +1,47 @@
 ---
 name: agent-summary
-description: Summarize the last agent output with appropriate depth, optionally play as voice
+description: Voice summary for agent completions AND session milestones — reads aloud through headphones
 user_invocable: true
 ---
 
-# Agent Summary
+# Voice Summary
 
-Generate a concise explanation of what the last completed agent did, why, and how it affects the project.
+Generate a concise voice summary of what just happened in the session. Works for both agent completions and main session milestones.
+
+## When to use
+
+- After an agent completes a background task (task notification received)
+- After a significant session milestone (build passed, tests ran, PR created, deploy finished)
+- After a complex multi-step operation completes
+- When the user invokes `/agent-summary` manually
 
 ## Instructions
 
-1. Read the most recent task notification in the conversation
+1. Identify what just completed:
+   - **Agent completion**: read the task notification result
+   - **Session milestone**: summarize the action and its outcome (build result, test count, deploy status)
 2. Classify the work:
-   - **Business**: product decisions, PM specs, roadmap → explain impact and strategic reasoning
-   - **Architecture**: design patterns, refactors → explain the pattern, why it was chosen, trade-offs
-   - **Implementation**: feature code, bug fixes → explain what changed, what it fixes, testing status
-   - **QA**: tests written/fixed → explain coverage, what's now protected, remaining gaps
-3. Generate a 3-5 sentence summary in the user's working language
+   - **Business**: product decisions, PM specs, roadmap
+   - **Architecture**: design patterns, refactors, new abstractions
+   - **Implementation**: feature code, bug fixes, UI changes
+   - **QA**: tests written/fixed, coverage changes
+   - **Ops**: builds, deploys, CI/CD, PR operations
+3. Generate a 2-4 sentence summary in the user's working language
+   - Be concise — this will be spoken aloud
+   - Lead with what happened, then why it matters
+   - Include numbers when relevant (test count, files changed, duration)
 4. Write the summary to `/tmp/claude-voice-summaries/latest_summary.txt`
-5. Run voice playback: `<project-root>/tooling/scripts/voice-summary.sh /tmp/claude-voice-summaries/latest_summary.txt <lang>`
-   - The script reads `$VOICE_SUMMARY` env var (off|headphones|all) and handles the gate logic
-   - You don't need to check headphones — the script does it
+5. Run: `<project-root>/tooling/scripts/voice-summary.sh /tmp/claude-voice-summaries/latest_summary.txt <lang>`
+   - The script handles headphone detection and mode gating via `$VOICE_SUMMARY`
 6. Always display the text summary in the conversation regardless of voice
 
 ## Output format
 
 ```
-## Resumen del agente
+## Resumen
 
-[3-5 sentence summary]
+[2-4 sentence summary]
 
-Tipo: [Business | Architecture | Implementation | QA]
-Archivos: [count] modificados
+Tipo: [Business | Architecture | Implementation | QA | Ops]
 Impacto: [LOW | MEDIUM | HIGH | CRITICAL]
 ```
