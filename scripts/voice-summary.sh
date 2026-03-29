@@ -15,6 +15,8 @@ LANG="${2:-es}"
 VOICE_ES="es-ES-AlvaroNeural"
 VOICE_EN="en-GB-RyanNeural"
 OUTPUT_DIR="/tmp/claude-voice-summaries"
+QUEUE_DIR="$OUTPUT_DIR/queue"
+LOCK_FILE="$OUTPUT_DIR/.playback.lock"
 MODE="${VOICE_SUMMARY:-off}"
 
 # Check headphones connected
@@ -64,6 +66,7 @@ if [ -z "$TEXT" ]; then
     exit 0
 fi
 
+# Generate audio
 echo "[voice-summary] Generating audio with edge-tts voice '$VOICE'..."
 edge-tts --voice "$VOICE" --text "$TEXT" --write-media "$AUDIO_FILE" 2>/dev/null
 
@@ -77,11 +80,24 @@ if [ ! -f "$AUDIO_FILE" ]; then
     fi
 fi
 
-echo "[voice-summary] Playing summary..."
-afplay "$AUDIO_FILE" &
-PLAY_PID=$!
+# Queue-based playback — no overlap
+mkdir -p "$QUEUE_DIR"
+QUEUE_FILE="$QUEUE_DIR/$(date +%s%N)_$(basename "$AUDIO_FILE")"
+mv "$AUDIO_FILE" "$QUEUE_FILE"
 
-# Clean up after playback
-wait $PLAY_PID 2>/dev/null
-rm -f "$AUDIO_FILE"
-echo "[voice-summary] Done"
+# Try to acquire lock (become the player)
+if (set -o noclobber; echo $$ > "$LOCK_FILE") 2>/dev/null; then
+    # We are the player — drain the queue
+    trap 'rm -f "$LOCK_FILE"' EXIT
+    while true; do
+        NEXT=$(ls -1 "$QUEUE_DIR"/* 2>/dev/null | head -1)
+        [ -z "$NEXT" ] && break
+        echo "[voice-summary] Playing: $(basename "$NEXT")"
+        afplay "$NEXT" 2>/dev/null
+        rm -f "$NEXT"
+    done
+    echo "[voice-summary] Queue empty. Done."
+else
+    # Another instance is already playing — file is queued, it will be picked up
+    echo "[voice-summary] Queued (another playback in progress)"
+fi
