@@ -42,8 +42,13 @@ mkdir -p <your-project>/tooling/scripts
 cp scripts/voice-summary.sh <your-project>/tooling/scripts/
 chmod +x <your-project>/tooling/scripts/voice-summary.sh
 
-# 5. Enable (add to .claude/settings.local.json)
+# 5. Copy notification hook (auto-speaks on events)
+cp scripts/voice-notification-hook.sh <your-project>/tooling/scripts/
+chmod +x <your-project>/tooling/scripts/voice-notification-hook.sh
+
+# 6. Enable (add to .claude/settings.local.json)
 # "env": { "VOICE_SUMMARY": "headphones", "VOICE_DEPTH": "detail" }
+# "hooks": { "Notification": [{"hooks": [{"type": "command", "command": "<your-project>/tooling/scripts/voice-notification-hook.sh", "async": true}]}] }
 ```
 
 ### Skills installed
@@ -52,6 +57,12 @@ chmod +x <your-project>/tooling/scripts/voice-summary.sh
 |-------|---------|--------------|
 | `vsm-summary` | `/vsm-summary` | Narrate the last agent result or session milestone |
 | `vsm` | `/vsm headphones detail` | Change voice mode and depth at runtime |
+
+### Hooks
+
+| Hook | Event | What it does |
+|------|-------|--------------|
+| `voice-notification-hook.sh` | Notification / Stop | Auto-speaks notifications (agent completions, task results) |
 
 ---
 
